@@ -24,6 +24,9 @@ E' expressamente proibido o uso de ferramentas de IA para a sua implementacao.
 A documentacao deste modulo deve ser melhorada.
 */
 
+#include <stdbool.h>
+
+#include "lista.h"
 
 typedef void *Graph;
 typedef int Node;
@@ -34,19 +37,19 @@ typedef void *Info;
   Invocado quando uma aresta é "descoberta"/"percorrida"/"classificada". 
   Tambem informa os tempos de descoberta e finalizacao
  */
-bool (*procEdge)(g,e,td,tf, void *extra); 
+typedef bool (*procEdge)(Graph g, Edge e, double* td, double* tf, void *extra); 
 
 /*
   Invocado quando percurso e' recomecado
  */
-bool (*dfsRestarted)(g, void *extra);
+typedef bool (*dfsRestarted)(Graph g, void *extra);
 
 
 
 /*
     Cria um grafo com, no maximo, "nVert" vertices.
  */
-Graph createGraph(nVert, bool directed);
+Graph createGraph(int nVert, bool directed);
 
 
 /*
@@ -64,63 +67,63 @@ int getTotalNodes(Graph g);
 /*
     Adiciona um novo vértice ao grafo "g" com o nome "nome".
  */
-Node addNode(g, nome, info);
+Node addNode(Graph g, double x, double y, char* nome, Info info);
 
 
 /*
     Retorna no' cujo de nome e' "nome". 
  */
-Node getNode(g, nome);
+Node getNode(Graph g, char* nome);
 
 
 /*
  */
-Info getNodeInfo(g, node);
+Info getNodeInfo(Graph g, Node n);
 
 
 /*
  */
-char *getNodeName(g, node);
+char *getNodeName(Graph g, Node n);
 
 
 /*
  */
-void setNodeInfo(g, node, info);
+void setNodeInfo(Graph g, Node n, Info info);
 
 
 /*
  */
-Edge addEdge(g, from, to, info);
+Edge addEdge(Graph g, Node from, Node to, char* ldir, char* lesq, double cmp, double vm, char* nome, Info info);
 
 
 /*
  */
-Edge getEdge(g, from, to);
+Edge getEdge(Graph g, Node from, Node to);
 
 
 /*
  */
-Node getFromNode(g, e)
+Node getFromNode(Graph g, Edge e);
 
   
 /*
  */  
-Node getToNode(g, e);
+Node getToNode(Graph g, Edge e);
 
 
 /*
  */
-Info getEdgeInfo(g, e);
+Info getEdgeInfo(Graph g, Edge e);
 
 
 /*
  */
-void setEdgeInfo(g, e, info);
+void setEdgeInfo(Graph g, Edge e, Info info);
 
 
 /*
  */
-void removeEdge(g,e);
+void removeEdge(Graph g, Edge e);
 
 
 /*
@@ -129,16 +132,16 @@ bool isAdjacent(Graph g, Node from, Node to);
 
 
 /* 
-   Adiciona 'a lista "nosAdjacentes" os nos adjacentes 'a "node".
+   Adiciona 'a lista "nosAdjacentes" os nos adjacentes 'a "Node n".
  */
-void adjacentNodes(g, node, nosAdjacentes);
+void adjacentNodes(Graph g, Node n, Lista nosAdjacentes);
 
 
 /*
    Adiciona 'a lista "arestaAdjacentes" as arestas (x,y), tal que,
    x == node.
  */
-void adjacentEdges(g, node, Lista arestasAdjacentes);
+void adjacentEdges(Graph g, Node n, Lista arestasAdjacentes);
 
 
 /*
@@ -150,7 +153,7 @@ void  getNodeNames(Graph g, Lista nomesNodes);
 /*
    Insere na lista "arestas", as arestas de g.
  */
-void getEdges(g, Lista arestas);
+void getEdges(Graph g, Lista arestas);
 
 
 /*
@@ -159,15 +162,15 @@ void getEdges(g, Lista arestas);
       A busca em profundidade, eventualmente, pode produzir uma floresta.
    newTree e' invocada sempre que o percurso for retomado.
  */  
-bool dfs(g, node, procEdge treeEdge, forwardEdge, returnEdge,
-	 crossEdge, newTree, void *extra);
+bool dfs(Graph g, Node n, procEdge treeEdge, Edge forwardEdge, Edge returnEdge,
+	 Edge crossEdge, /*newTree,*/ void *extra);
 
 
 /*
    Percorre o grafo g em largura, a partir do no' node. discoverNode e' usada
    para a aresta (x,y) usada para "descobrir" o y.
  */
-bool bfs(g, node, discoverNode, void *extra);
+bool bfs(Graph g, Node n, Node discoverNode, void *extra);
 
 
 /*
@@ -184,14 +187,14 @@ void killDG(Graph g);
 (nVerts e' o tamanho deste vetor). Caso comAresta seja true calcula o subgrafo 
 induzido pelos vertices em nomesVers
  */
-void  createSubgraphDG(g, char *nomeSubgrafo, char *nomesVerts[], int nVert,
+void  createSubgraphDG(Graph g, char *nomeSubgrafo, char *nomesVerts[], int nVert,
 		       bool comArestas);
 
 
 /*
     Adiciona a aresta ao subgrafo.
  */
-Edge includeEdgeSDG(g, char *nomeSubgrafo, e);
+Edge includeEdgeSDG(Graph g, char *nomeSubgrafo, Edge e);
 
 /*
   Retorna verdadeiro se a aresta "e" pertence ao subgrafo "nomeSubgrafo" do grafo g; 
@@ -211,7 +214,7 @@ void excludeEdgeSDG(Graph g, char *nomeSubgrafo, Edge e);
    x == node; x pertence ao subgrafo "nomeSubgrafo", (x,y) tambem e' aresta
    do subgrafo.
  */
-void adjacentEdgesSDG(Graph g, char *nomeSubgrafo, Node node, Lista arestasAdjacentes);
+void adjacentEdgesSDG(Graph g, char *nomeSubgrafo, Node n, Lista arestasAdjacentes);
 
 /*
    Adiciona 'a lista "lstNodes" (Lista<Node>) os nós do subgrafo "nomeSubgrafo".
@@ -226,5 +229,5 @@ void getAllEdgesSDG(Graph g, char *nomeSubgrafo, Lista lstEdges);
 /*
   Novo grafo.
  */
-Graph produceGraph(g, nomeSubgrafo);
+Graph produceGraph(Graph g, char* nomeSubgrafo);
 #endif
