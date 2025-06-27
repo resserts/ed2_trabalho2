@@ -33,6 +33,8 @@ typedef int Node;
 typedef void *Edge;
 typedef void *Info;
 
+#define MAX_STR_LEN 255
+
 /*
   Invocado quando uma aresta é "descoberta"/"percorrida"/"classificada". 
   Tambem informa os tempos de descoberta e finalizacao
@@ -147,7 +149,7 @@ void adjacentEdges(Graph g, Node n, Lista arestasAdjacentes);
 /*
    Insere na lista "nomesNodes" os nomes atribuidos aos nos do grafo.
  */
-void  getNodeNames(Graph g, Lista nomesNodes);
+void getNodeNames(Graph g, Lista nomesNodes);
 
 
 /*

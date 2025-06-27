@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -5,15 +6,15 @@
 #include "lista.h"
 
 typedef struct {
-     char* nome;
+     char nome[MAX_STR_LEN];
      Lista adjacentes;
      double x, y;
      Info info;
 }NodeSt;
 typedef struct {
-     char* nome;
-     char* ldir;
-     char* lesq;
+     char nome[MAX_STR_LEN];
+     char ldir[MAX_STR_LEN];
+     char lesq[MAX_STR_LEN];
      Node n1, n2;
      double comp;
      double vm;
@@ -25,8 +26,6 @@ typedef struct {
      NodeSt* nodes;
      Lista edges;
 }GraphSt;
-typedef int Node;
-typedef void *Edge;
 
 Graph createGraph(int nVert, bool directed){
      GraphSt* gt=malloc(sizeof(GraphSt));
@@ -39,6 +38,7 @@ Graph createGraph(int nVert, bool directed){
 
 int getMaxNodes(Graph g){
      GraphSt* gSt=g;
+     printf("geto os max\n");
      return gSt->maxNodes;
 }
 
@@ -46,16 +46,18 @@ int getTotalNodes(Graph g){
      GraphSt* gt=g;
      int totalNodes=0;
      for(int i=0; i<gt->maxNodes; i++){
-          if(gt->nodes[i].nome==NULL){
+          if(gt->nodes[i].nome[0]==0){
                break;
           }
           totalNodes++;
      }
+     printf("total: %i\n", totalNodes);
      return totalNodes;
 }
 
 Node addNode(Graph g, double x, double y, char* nome, Info info){
      if(getTotalNodes(g)>=getMaxNodes(g)){
+          printf("tacheio\n");
           return -1;
      }
      int id=getTotalNodes(g);
@@ -65,6 +67,7 @@ Node addNode(Graph g, double x, double y, char* nome, Info info){
      gt->nodes[id].adjacentes=criaLista();
      gt->nodes[id].x=x;
      gt->nodes[id].y=y;
+     printf("criou %i\n", id);
      return id;
 }
 
@@ -215,3 +218,29 @@ void getEdges(Graph g, Lista arestas){
           insertList(arestas, et, i);
      }
 }
+
+
+void dfsaux();
+/*
+   Faz percurso em profundidade sobre  g, a partir do no' node, classificando 
+   as arestas do grafo, invocando a respectiva funcao.
+      A busca em profundidade, eventualmente, pode produzir uma floresta.
+   newTree e' invocada sempre que o percurso for retomado.
+ */  
+bool dfs(Graph g, Node n, procEdge treeEdge, Edge forwardEdge, Edge returnEdge,
+	 Edge crossEdge, /*newTree,*/ void *extra){
+     bool* visitado=(bool*)calloc(sizeof(bool), getMaxNodes(g));
+     Lista pilha=criaLista();
+     int* 
+     insertList(pilha, n, 0);
+
+     free(visitado);
+     return true;
+}
+
+
+
+
+
+
+

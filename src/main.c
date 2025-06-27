@@ -1,4 +1,8 @@
 #include "graph.h"
+#include "smutreap.h"
+#include "svg.h"
+#include "geo.h"
+#include "via.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,7 +27,6 @@ int main(int argc, char* argv[]){
           printf("i: %i\n", i);
           printf("argv[i]: %s\n", argv[i]);
           if(strcmp(argv[i], "-f")==0){
-               printf("entro comandos\n");
                i++;
                strcpy(geo, argv[i]);
                strcpy(arq, geo);
@@ -31,21 +34,34 @@ int main(int argc, char* argv[]){
           }else if(strcmp(argv[i], "-e")==0){
                i++;
                strcpy(BED, argv[i]);
+               if(BED[strlen(BED)-1]!='/'){
+                    strcat(BED, "/");
+               }
           }else if(strcmp(argv[i], "-o")==0){
                i++;
                strcpy(BSD, argv[i]);
+               if(BSD[strlen(BSD)-1]!='/'){
+                    strcat(BSD, "/");
+               }
           }else if(strcmp(argv[i], "-q")==0){
                i++;
                strcpy(query, argv[i]);
           }else if(strcmp(argv[i], "-v")==0){
                i++;
-               strcpy(query, argv[i]);
+               strcpy(via, argv[i]);
           }     
      }
 
+     SmuTreap smut=newSmuTreap(10, 1.1, 0.0001, 10000);
      char geoArq[MAX_PATH_LEN];
      strcpy(geoArq, BED);
      strcat(geoArq, geo);
+     comandosGeo(smut, geoArq);
+
+     char viaArq[MAX_PATH_LEN];
+     strcpy(viaArq, BED);
+     strcat(viaArq, via);
+     Graph g=comandosVia(viaArq);
 
      char queryArq[MAX_PATH_LEN];
      strcpy(queryArq, BED);
@@ -58,6 +74,7 @@ int main(int argc, char* argv[]){
      strcpy(svgArq, BSD);
      strcat(svgArq, arq);
      strcat(svgArq, ".svg");
+     gerarSvg(smut, svgArq, NULL);
 
      return 0;
 }
