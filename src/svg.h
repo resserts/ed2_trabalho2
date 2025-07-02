@@ -2,6 +2,7 @@
 #define _SVG_H
 
 #include "smutreap.h"
+#include "graph.h"
 #include "retangulo.h"
 #include "circulo.h"
 #include "linha.h"
@@ -11,6 +12,6 @@ enum tipo{RETANGULO, CIRCULO, LINHA, TEXTO, QUADRA};
 typedef void* Letra;
 
 Letra criaLetra(double x, double y, char l);
-void gerarSvg(SmuTreap t, char* fn, Lista letras);
+void gerarSvg(SmuTreap t, char* fn, Lista letras, Graph g);
 
 #endif

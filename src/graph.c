@@ -24,7 +24,7 @@ typedef struct {
      bool directed;
      int maxNodes;
      NodeSt* nodes;
-     Lista edges;
+     Lista* edges;
 }GraphSt;
 
 Graph createGraph(int nVert, bool directed){
@@ -32,7 +32,10 @@ Graph createGraph(int nVert, bool directed){
      gt->directed=directed;
      gt->maxNodes=nVert;
      gt->nodes=calloc(sizeof(NodeSt), gt->maxNodes);
-     gt->edges=criaLista();
+     gt->edges=calloc(sizeof(Lista), gt->maxNodes);
+     for(int i=0; i<gt->maxNodes; i++){
+          gt->edges[i]=criaLista();
+     }
      return gt;
 }
 
@@ -51,7 +54,6 @@ int getTotalNodes(Graph g){
           }
           totalNodes++;
      }
-     printf("total: %i\n", totalNodes);
      return totalNodes;
 }
 
@@ -82,6 +84,14 @@ Node getNode(Graph g, char* nome){
      return -1;
 }
 
+double getNodeX(Graph g, Node n){
+     GraphSt* gt=g;
+     return gt->nodes[n].x;
+}
+double getNodeY(Graph g, Node n){
+     GraphSt* gt=g;
+     return gt->nodes[n].y;
+}
 
 Info getNodeInfo(Graph g, Node n){
      GraphSt* gt=g;
@@ -112,7 +122,7 @@ Edge addEdge(Graph g, Node from, Node to, char* ldir, char* lesq, double cmp, do
      et->vm=vm;
      strcpy(et->nome, nome);
      et->info=info;
-     insertList(gt->edges, et, 0);     
+     insertList(gt->edges[from], et, 0);     
      int* adj=malloc(sizeof(int));
      *adj=et->n2;
      insertList(gt->nodes[et->n1].adjacentes, adj, 0);
@@ -122,8 +132,8 @@ Edge addEdge(Graph g, Node from, Node to, char* ldir, char* lesq, double cmp, do
 
 Edge getEdge(Graph g, Node from, Node to){
      GraphSt* gt=g;
-     for(int i=0; getValor(gt->edges, i); i++){
-          EdgeSt* et=getValor(gt->edges, i);
+     for(int i=0; getValor(gt->edges[from], i); i++){
+          EdgeSt* et=getValor(gt->edges[from], i);
           if(et->n1==from && et->n2==to){
                return et;
           }
@@ -168,7 +178,7 @@ void removeEdge(Graph g, Edge e){
                          break;
                     }
                }
-               removeList(gt->edges, i);
+               removeList(gt->edges[et->n1], i);
                free(e);
           }
      }
@@ -194,10 +204,8 @@ void adjacentNodes(Graph g, Node n, Lista nosAdjacentes){
 void adjacentEdges(Graph g, Node n, Lista arestasAdjacentes){
      GraphSt* gt=g;
      EdgeSt* et;
-     for (int i=0; et=getValor(gt->edges, i); i++) {
-          if(et->n1==n){
-               insertList(arestasAdjacentes, et, 0);
-          }
+     for (int i=0; et=getValor(gt->edges[n], i); i++) {
+          insertList(arestasAdjacentes, et, 0);
      }
 }
 
@@ -214,27 +222,89 @@ void getNodeNames(Graph g, Lista nomesNodes){
 void getEdges(Graph g, Lista arestas){
      GraphSt* gt=g;
      EdgeSt* et;
-     for (int i=0; et=getValor(gt->edges, i); i++) {
-          insertList(arestas, et, i);
+     for (int j=0; j<getMaxNodes(g); j++) {
+          for (int i=0; et=getValor(gt->edges[j], i); i++) {
+               insertList(arestas, et, i);
+          }
      }
 }
 
+typedef struct{
+     char cor;
+     int td, tf;
+     Node pai;
+}dfsNInfo;
 
-void dfsaux();
+bool dfsaux(GraphSt* gt, Node n, dfsNInfo* infos, int* tempo, procEdge treeEdge, procEdge forwardEdge, procEdge returnEdge,
+	 procEdge crossEdge, void *extra){
+
+     *tempo=*tempo+1;
+     infos[n].td=*tempo;
+     infos[n].cor='c';
+     Node* vis;
+     double td, tf;
+     printf("simple dnfaux: %i\n", *tempo);
+     for(int i=0; vis=getValor(gt->nodes[n].adjacentes, i); i++){
+          if(infos[*vis].cor=='b'){
+               infos[*vis].pai=n;
+               treeEdge(gt, getEdge(gt, n, *vis), &td, &tf, extra);
+               dfsaux(gt, *vis, infos, tempo, treeEdge, forwardEdge, returnEdge, crossEdge, extra);
+          }else if(infos[*vis].cor=='c'){
+               returnEdge(gt, getEdge(gt, n, *vis), &td, &tf, extra);
+          }else{
+               Node pai=infos[*vis].pai;
+               bool cross=true;
+               while (pai!=-1) {
+                    if(pai=n){
+                         forwardEdge(gt, getEdge(gt, n, *vis), &td, &tf, extra);
+                         cross=false;
+                         break;
+                    }
+                    pai=infos[pai].pai;
+               }
+               if(cross){
+                    crossEdge(gt, getEdge(gt, n, *vis), &td, &tf, extra);
+               }
+          }
+
+     }
+
+     *tempo=*tempo+1;
+     infos[n].tf=*tempo;
+     infos[n].cor='p';
+}
 /*
    Faz percurso em profundidade sobre  g, a partir do no' node, classificando 
    as arestas do grafo, invocando a respectiva funcao.
       A busca em profundidade, eventualmente, pode produzir uma floresta.
    newTree e' invocada sempre que o percurso for retomado.
  */  
-bool dfs(Graph g, Node n, procEdge treeEdge, Edge forwardEdge, Edge returnEdge,
-	 Edge crossEdge, /*newTree,*/ void *extra){
-     bool* visitado=(bool*)calloc(sizeof(bool), getMaxNodes(g));
-     Lista pilha=criaLista();
-     int* 
-     insertList(pilha, n, 0);
+typedef bool (*procEdge)(Graph g, Edge e, double* td, double* tf, void *extra); 
+typedef bool (*dfsRestarted)(Graph g, void *extra);
+bool dfs(Graph g, Node n, procEdge treeEdge, procEdge forwardEdge, procEdge returnEdge,
+	 procEdge crossEdge, dfsRestarted newTree, void *extra){
+     GraphSt* gt=g;
+     dfsNInfo* infos=(dfsNInfo*)malloc(sizeof(dfsNInfo) * getTotalNodes(g));
+     for (int i=0; i<getTotalNodes(g); i++) {
+          infos[i].cor='b';
+          infos[i].td=0;
+          infos[i].tf=0;
+          infos[i].pai=-1;
+     }
+     int tempo=0;
+     dfsaux(g, n, infos, &tempo, treeEdge, forwardEdge, returnEdge, crossEdge, extra);
 
-     free(visitado);
+     int totalNodes=getTotalNodes(g);
+     for(int i=0; i<totalNodes; i++){
+          if(infos[i].cor=='b'){
+               if(newTree){
+                    newTree(g, extra);
+               }
+          }
+
+     }
+
+     free(infos);
      return true;
 }
 

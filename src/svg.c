@@ -1,11 +1,11 @@
 #include "svg.h"
+#include "graph.h"
 #include "lista.h"
 #include "retangulo.h"
 #include "circulo.h"
 #include "linha.h"
 #include "texto.h"
 #include "quadra.h"
-#include "smutreap.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -28,7 +28,34 @@ void svgLetras(FILE* f, Lista letras){
      }
 }
 
-void svgNo(SmuTreap t, Node n, Info i, double x, double y, void *aux){
+void graphSvg(Graph g, FILE* f){
+     int total=getTotalNodes(g);
+     for(int i=0; i<total; i++){
+          fprintf(f, "<circle cx=\"%f\" cy=\"%f\" r=\"5\" stroke=\"blue\" fill=\"green\" />\n",
+                         getNodeX(g, i), getNodeY(g, i));
+
+     }
+     /*
+     Edge e;
+     Lista arestas=criaLista();
+     getEdges(g, arestas);
+     for (int i=0; e=getValor(arestas, i); i++) {
+          double fromX=getNodeX(g, getFromNode(g, e));
+          double fromY=getNodeY(g, getFromNode(g, e));
+          double toX=getNodeX(g, getToNode(g, e));
+          double toY=getNodeY(g, getToNode(g, e));
+          char cor[63]="black";
+          if(fromX>toX){
+               strcpy(cor, "purple");
+          }else if(fromX<toX){
+               strcpy(cor, "orange");
+          }
+          fprintf(f, "<line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" stroke=\"%s\" />\n",
+                    fromX, fromY, toX, toY, cor);
+     }
+     */
+}
+void svgNo(SmuTreap t, NodeSmut n, Info i, double x, double y, void *aux){
      DescritorTipoInfo tipo=getTypeInfoSrbT(t, n);
      switch (tipo) {
           case QUADRA:
@@ -84,18 +111,58 @@ void svgNo(SmuTreap t, Node n, Info i, double x, double y, void *aux){
                break;
      }
 }
-void gerarSvg(SmuTreap t, char* fn, Lista letras){
+bool treeEdge(Graph g, Edge e, double* td, double* tf, void *extra){
+     double fromX=getNodeX(g, getFromNode(g, e));
+     double fromY=getNodeY(g, getFromNode(g, e));
+     double toX=getNodeX(g, getToNode(g, e));
+     double toY=getNodeY(g, getToNode(g, e));
+     char cor[63]="darkgreen";
+     fprintf(extra, "<line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" stroke=\"%s\" stroke-width=\"3\" />\n",
+               fromX, fromY, toX, toY, cor);
+}
+bool returnEdge(Graph g, Edge e, double* td, double* tf, void *extra){
+     double fromX=getNodeX(g, getFromNode(g, e));
+     double fromY=getNodeY(g, getFromNode(g, e));
+     double toX=getNodeX(g, getToNode(g, e));
+     double toY=getNodeY(g, getToNode(g, e));
+     char cor[63]="darkmagenta";
+     fprintf(extra, "<line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" stroke=\"%s\" />\n",
+               fromX, fromY, toX, toY, cor);
+}
+bool forwardEdge(Graph g, Edge e, double* td, double* tf, void *extra){
+     double fromX=getNodeX(g, getFromNode(g, e));
+     double fromY=getNodeY(g, getFromNode(g, e));
+     double toX=getNodeX(g, getToNode(g, e));
+     double toY=getNodeY(g, getToNode(g, e));
+     char cor[63]="darkblue";
+     fprintf(extra, "<line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" stroke=\"%s\" />\n",
+               fromX, fromY, toX, toY, cor);
+}
+bool crossEdge(Graph g, Edge e, double* td, double* tf, void *extra){
+     double fromX=getNodeX(g, getFromNode(g, e));
+     double fromY=getNodeY(g, getFromNode(g, e));
+     double toX=getNodeX(g, getToNode(g, e));
+     double toY=getNodeY(g, getToNode(g, e));
+     char cor[63]="black";
+     fprintf(extra, "<line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" stroke=\"%s\" />\n",
+               fromX, fromY, toX, toY, cor);
+}
+void gerarSvg(SmuTreap t, char* fn, Lista letras, Graph g){
      FILE* f=fopen(fn, "w");
      if(f==NULL){
           return;
      }
 
      fprintf(f, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-     fprintf(f, "<svg version=\"1.1\" xmlns=\"[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)\">\n");
+     fprintf(f, "<svg version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\">\n");
 
      visitaProfundidadeSmuT(t, &svgNo, f);
      if(letras!=NULL){
           svgLetras(f, letras);
+     }
+     if(g!=NULL){
+          graphSvg(g, f);
+          dfs(g, 1, &treeEdge, &forwardEdge, &returnEdge, &crossEdge, NULL, f);
      }
 
      fprintf(f, "</svg>\n"); 

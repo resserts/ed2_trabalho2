@@ -74,7 +74,7 @@ int main(int argc, char* argv[]){
      strcpy(svgArq, BSD);
      strcat(svgArq, arq);
      strcat(svgArq, ".svg");
-     gerarSvg(smut, svgArq, NULL);
+     gerarSvg(smut, svgArq, NULL, g);
 
      return 0;
 }

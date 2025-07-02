@@ -78,6 +78,9 @@ Node addNode(Graph g, double x, double y, char* nome, Info info);
 Node getNode(Graph g, char* nome);
 
 
+double getNodeX(Graph g, Node n);
+double getNodeY(Graph g, Node n);
+
 /*
  */
 Info getNodeInfo(Graph g, Node n);
@@ -164,8 +167,8 @@ void getEdges(Graph g, Lista arestas);
       A busca em profundidade, eventualmente, pode produzir uma floresta.
    newTree e' invocada sempre que o percurso for retomado.
  */  
-bool dfs(Graph g, Node n, procEdge treeEdge, Edge forwardEdge, Edge returnEdge,
-	 Edge crossEdge, /*newTree,*/ void *extra);
+bool dfs(Graph g, Node n, procEdge treeEdge, procEdge forwardEdge, procEdge returnEdge,
+	 procEdge crossEdge, dfsRestarted newTree, void *extra);
 
 
 /*
