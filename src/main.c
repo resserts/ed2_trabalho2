@@ -3,16 +3,18 @@
 #include "svg.h"
 #include "geo.h"
 #include "via.h"
+#include "query.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #define MAX_PATH_LEN 255
 
 
 int main(int argc, char* argv[]){
-     printf("argc: %i\n", argc);
+     clock_t start=clock();
      char BED[MAX_PATH_LEN]="./";
      char BSD[MAX_PATH_LEN]="./";
      char geo[MAX_PATH_LEN];
@@ -69,12 +71,17 @@ int main(int argc, char* argv[]){
      char saida[MAX_PATH_LEN];
      strcpy(saida, BSD);
      strcat(saida, arq);
+     comandosQuery(smut, queryArq, saida);
 
      char svgArq[MAX_PATH_LEN];
      strcpy(svgArq, BSD);
      strcat(svgArq, arq);
      strcat(svgArq, ".svg");
      gerarSvg(smut, svgArq, NULL, g);
+
+     clock_t end=clock();
+     double time_spent=(double)(end-start) / CLOCKS_PER_SEC;
+     printf("\nexecution time: %lf\n", time_spent);
 
      return 0;
 }

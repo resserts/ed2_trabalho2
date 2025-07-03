@@ -21,7 +21,7 @@ Graph comandosVia(char* fn){
 
      char comando[5];
      while(fscanf(f, "%s", comando)!=EOF){
-          printf("comando: %s\n", comando);
+          //printf("comando: %s\n", comando);
           if(strcmp(comando, "e")==0){
                char v1[MAX_STR_LEN];
                char v2[MAX_STR_LEN];

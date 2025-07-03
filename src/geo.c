@@ -19,8 +19,7 @@ void comandosGeo(SmuTreap t, char* fn){
      }
      char comando[5];
      while(fscanf(f, "%s", comando)!=EOF){
-          printf("entro while\n");
-          printf("comando: %s\n", comando);
+          //printf("comando: %s\n", comando);
           if(strcmp(comando, "cq")==0){
                char strW[30];
                char cfill[30];

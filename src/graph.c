@@ -41,7 +41,6 @@ Graph createGraph(int nVert, bool directed){
 
 int getMaxNodes(Graph g){
      GraphSt* gSt=g;
-     printf("geto os max\n");
      return gSt->maxNodes;
 }
 
@@ -69,7 +68,6 @@ Node addNode(Graph g, double x, double y, char* nome, Info info){
      gt->nodes[id].adjacentes=criaLista();
      gt->nodes[id].x=x;
      gt->nodes[id].y=y;
-     printf("criou %i\n", id);
      return id;
 }
 
@@ -243,7 +241,7 @@ bool dfsaux(GraphSt* gt, Node n, dfsNInfo* infos, int* tempo, procEdge treeEdge,
      infos[n].cor='c';
      Node* vis;
      double td, tf;
-     printf("simple dnfaux: %i\n", *tempo);
+     //printf("simple dnfaux: %i\n", *tempo);
      for(int i=0; vis=getValor(gt->nodes[n].adjacentes, i); i++){
           if(infos[*vis].cor=='b'){
                infos[*vis].pai=n;
