@@ -79,7 +79,7 @@ void svgNo(SmuTreap t, NodeSmut n, Info i, double x, double y, void *aux){
                          x, y, getCircRaio(i), getCircCorb(i), getCircCorp(i));
                break;
           case LINHA:
-               fprintf(aux, "<line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" stroke=\"%s\" />\n",
+               fprintf(aux, "<line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" stroke=\"%s\" stroke-width=\"5\" />\n",
                          x, y, getLinhax2(i), getLinhay2(i), getLinhaCor(i));
                break;
           case TEXTO:

@@ -71,7 +71,7 @@ int main(int argc, char* argv[]){
      char saida[MAX_PATH_LEN];
      strcpy(saida, BSD);
      strcat(saida, arq);
-     comandosQuery(smut, queryArq, saida);
+     comandosQuery(smut, g, queryArq, saida);
 
      char svgArq[MAX_PATH_LEN];
      strcpy(svgArq, BSD);

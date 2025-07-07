@@ -171,12 +171,17 @@ bool dfs(Graph g, Node n, procEdge treeEdge, procEdge forwardEdge, procEdge retu
 	 procEdge crossEdge, dfsRestarted newTree, void *extra);
 
 
-/*
-   Percorre o grafo g em largura, a partir do no' node. discoverNode e' usada
+/* Percorre o grafo g em largura, a partir do no' node. discoverNode e' usada
    para a aresta (x,y) usada para "descobrir" o y.
  */
 bool bfs(Graph g, Node n, Node discoverNode, void *extra);
 
+
+
+Lista caminhoCurto(Graph g, Node from, Node to);
+
+
+Lista caminhoRapido(Graph g, Node from, Node to);
 
 /*
    Destroi o grafo "g".
