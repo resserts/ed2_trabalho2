@@ -1,6 +1,8 @@
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "graph.h"
 #include "lista.h"
@@ -123,7 +125,6 @@ Edge addEdge(Graph g, Node from, Node to, char* ldir, char* lesq, double cmp, do
      insertList(gt->edges[from], et, 0);     
      int* adj=malloc(sizeof(int));
      *adj=et->n2;
-     printf("added %i->%i\n", et->n1, et->n2);
      return et;
 }
 
@@ -156,6 +157,18 @@ Info getEdgeInfo(Graph g, Edge e){
      EdgeSt* et=e;
      return et->info;
 }
+
+double getEdgeComp(Graph g, Edge e){
+     EdgeSt* et=e;
+     return et->comp;
+}
+
+
+double getEdgeVelMedia(Graph g, Edge e){
+     EdgeSt* et=e;
+     return et->vm;
+}
+
 
 
 void setEdgeInfo(Graph g, Edge e, Info info){
@@ -343,20 +356,23 @@ bool bfs(Graph g, Node n, Node discoverNode, void *extra){
      return true;
 }
 
-
 typedef struct{
-     double d;
+     double w;
+     double c;
      Node p;
-}curtoInfo;
-Lista caminhoCurto(Graph g, Node from, Node to){
+}caminhoInfo;
+Lista caminho(Graph g, Node from, Node to, nodeWeight nw, nodeWeight nc){
      GraphSt* gt=g;
-     curtoInfo* infos=(curtoInfo*)malloc(sizeof(curtoInfo)*getTotalNodes(g));
+     caminhoInfo* infos=(caminhoInfo*)malloc(sizeof(caminhoInfo)*getTotalNodes(g));
      for (int i=0; i<getTotalNodes(g); i++) {
-          infos[i].d=99999999;
+          infos[i].w=99999999+i;
+          infos[i].c=99999999+i;
           infos[i].p=-1;
      }
-     infos[from].d=0;
+     infos[from].w=0;
+     infos[from].c=0;
      Lista fila=criaLista();
+     printf("total: %i\n", getTotalNodes(g));
      for(int i=0; i<getTotalNodes(g); i++){
           if(i!=from){
                Node* n=(Node*)malloc(sizeof(Node));
@@ -367,135 +383,97 @@ Lista caminhoCurto(Graph g, Node from, Node to){
      Node* next=(Node*)malloc(sizeof(Node));
      *next=from;
      insertList(fila, next, 0);
+     double maiorTime=0;
+     int tamanhoLista=0;
+     while (getValor(fila, tamanhoLista)) {
+          tamanhoLista++;
+     }
      for (int w=0; (next=getValor(fila, 0)); w++) {
-          /*for (int z=0; z<10; z++) {
-               printf("%i || ", *(Node*)getValor(fila, z));
+          /*
+          for (int z=0; z<10; z++) {
+               Node n=*(Node*)getValor(fila, z);
+               printf("%i(%f) || ", n, infos[n].c);
           }
-          printf("loop %i || menor dist=%lf\n", w, infos[*next].d);
+          printf("loop %i || menor cost=%lf\n", w, infos[*next].c);
           */
           if(*next==to){
                // TODO: free na fila
-               printf("acho o to\n");
+               printf("final weight=%f\n", infos[*next].w);
+               printf("maiorTime=%f\n", maiorTime/CLOCKS_PER_SEC);
 
                fila=criaLista();
                Node p=to;
-               while(infos[p].p>=0){
+               while(p>=0){
                     Node* n=(Node*)malloc(sizeof(Node));
                     *n=p;
                     insertList(fila, n, 0);
+                    if(p==from){
+                         printf("returno a fila\n");
+                         return fila;
+                    }
                     p=infos[p].p;
                }
-               printf("returno a fila\n");
-               return fila;
+               printf("returno fila nula\n");
+               return NULL;
           }
           EdgeSt* et;
           removeList(fila, 0);
+          tamanhoLista--;
           for(int i=0; et=getValor(gt->edges[*next], i); i++){
-               if(infos[et->n2].d>infos[*next].d + et->comp){
-                    infos[et->n2].d=infos[*next].d + et->comp;
+               double newWeight=nw(g, infos[*next].w, et, to);
+               if(infos[et->n2].w>newWeight){
+                    infos[et->n2].w=newWeight;
+                    double newCost=nc(g, infos[*next].w, et, to);
                     infos[et->n2].p=*next;
                     Node* maior;
-                    //printf("ta menor\n");
-
-                    for(int j=0; maior=getValor(fila, j); j++){
-                         if (infos[*maior].d>=infos[et->n2].d) {
-                              Node* remove;
-                              for(int k=j; remove=getValor(fila, k); k++){
-                                   //printf("ate aqui veio %i==%i\n", *remove, et->n2);
-                                   if(*remove==et->n2){
-                                        insertList(fila, remove, j);
-                                        removeList(fila, k);
-                                        break;
-                                   }
+                    
+                    clock_t maiorStart=clock();
+                    Node* val;
+                    int inserir=ceil(getTotalNodes(g)/2.);
+                    int low=0;
+                    int high=tamanhoLista-1;
+                    int mid;
+                    while(low<=high){
+                         mid=low + (high-low)/2.;
+                         val=getValor(fila, mid);
+                         if(newCost>infos[*val].c){
+                              if(newCost<=infos[*(Node*)getValor(fila, mid+1)].c){
+                                   break;
                               }
-                              break;
+                              low=mid+1;
+                         }else{
+                              high=mid-1;
                          }
                     }
+                    inserir=mid;
 
-               }
-          }
-          //free(next);
-     }
-     printf("returno a fila\n");
-     return fila;
-}
 
-typedef struct{
-     double t;
-     Node p;
-}rapidoInfo;
-Lista caminhoRapido(Graph g, Node from, Node to){
-     GraphSt* gt=g;
-     rapidoInfo* infos=(rapidoInfo*)malloc(sizeof(rapidoInfo)*getTotalNodes(g));
-     for (int i=0; i<getTotalNodes(g); i++) {
-          infos[i].t=99999999;
-          infos[i].p=-1;
-     }
-     infos[from].t=0;
-     Lista fila=criaLista();
-     for(int i=0; i<getTotalNodes(g); i++){
-          if(i!=from){
-               Node* n=(Node*)malloc(sizeof(Node));
-               *n=i;
-               insertList(fila, n, 9999999);
-          }
-     }
-     Node* next=(Node*)malloc(sizeof(Node));
-     *next=from;
-     insertList(fila, next, 0);
-     for (int w=0; (next=getValor(fila, 0)); w++) {
-          /*for (int z=0; z<10; z++) {
-               printf("%i || ", *(Node*)getValor(fila, z));
-          }
-          printf("loop %i || menor dist=%lf\n", w, infos[*next].t);
-          */
-          if(*next==to){
-               // TODO: free na fila
-               printf("acho o to\n");
-
-               fila=criaLista();
-               Node p=to;
-               while(infos[p].p>=0){
-                    Node* n=(Node*)malloc(sizeof(Node));
-                    *n=p;
-                    insertList(fila, n, 0);
-                    p=infos[p].p;
-               }
-               printf("returno a fila\n");
-               return fila;
-          }
-          EdgeSt* et;
-          removeList(fila, 0);
-          for(int i=0; et=getValor(gt->edges[*next], i); i++){
-               double newTime=infos[*next].t + (et->comp/et->vm);
-               if(infos[et->n2].t>newTime){
-                    infos[et->n2].t=newTime;
-                    infos[et->n2].p=*next;
-                    Node* maior;
-                    //printf("ta menor\n");
-
-                    for(int j=0; maior=getValor(fila, j); j++){
-                         if (infos[*maior].t>=infos[et->n2].t) {
-                              Node* remove;
-                              for(int k=j; remove=getValor(fila, k); k++){
-                                   //printf("ate aqui veio %i==%i\n", *remove, et->n2);
-                                   if(*remove==et->n2){
-                                        insertList(fila, remove, j);
-                                        removeList(fila, k);
-                                        break;
-                                   }
-                              }
+                    low=0;
+                    high=tamanhoLista;
+                    while(low<=high){
+                         mid=low + (high-low)/2.;
+                         val=getValor(fila, mid);
+                         if(et->n2==*val){
                               break;
+                         }else if(infos[et->n2].c>infos[*val].c){
+                              low=mid+1;
+                         }else{
+                              high=mid-1;
                          }
                     }
-
+                    infos[et->n2].c=newCost;
+                    Node* in=(Node*)malloc(sizeof(Node));
+                    *in=*val;
+                    insertList(fila, in, inserir);
+                    removeList(fila, mid);
+                    clock_t maiorEnd=clock();
+                    maiorTime+=maiorEnd-maiorStart;
                }
           }
-          //free(next);
      }
-     printf("returno a fila\n");
-     return fila;
+     return NULL;
 }
+
 
 void killDG(Graph g){
      GraphSt* gt=g;

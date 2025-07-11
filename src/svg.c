@@ -161,8 +161,8 @@ void gerarSvg(SmuTreap t, char* fn, Lista letras, Graph g){
           svgLetras(f, letras);
      }
      if(g!=NULL){
-          graphSvg(g, f);
-          dfs(g, 1, &treeEdge, &forwardEdge, &returnEdge, &crossEdge, NULL, f);
+          //graphSvg(g, f);
+          //dfs(g, 1, &treeEdge, &forwardEdge, &returnEdge, &crossEdge, NULL, f);
      }
 
      fprintf(f, "</svg>\n"); 

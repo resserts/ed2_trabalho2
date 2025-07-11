@@ -20,6 +20,10 @@ Graph comandosVia(char* fn){
      Graph g=createGraph(nVert, true);
 
      char comando[5];
+     double compM=0;
+     double compm=99;
+     double velM=0;
+     double velm=99;
      while(fscanf(f, "%s", comando)!=EOF){
           //printf("comando: %s\n", comando);
           if(strcmp(comando, "e")==0){
@@ -37,6 +41,16 @@ Graph comandosVia(char* fn){
                fscanf(f, "%lf", &comp);
                fscanf(f, "%lf", &velMedia);
                fscanf(f, "%s", nome);
+               if(velMedia>velM){
+                    velM=velMedia;
+               }else if(velMedia<velm){
+                    velm=velMedia;
+               }
+               if(comp>compM){
+                    compM=comp;
+               }else if(comp<compm){
+                    compm=comp;
+               }
                addEdge(g, getNode(g, v1), getNode(g, v2), ldir, lesq, comp, velMedia, nome, NULL);
           }else if(strcmp(comando, "v")==0){
                char id[MAX_STR_LEN];
@@ -49,6 +63,10 @@ Graph comandosVia(char* fn){
                addNode(g, x, y, id, NULL);
           }     
      }
+     printf("maior vel=%f\n", velM);
+     printf("menor vel=%f\n", velm);
+     printf("maior comp=%f\n", compM);
+     printf("menor comp=%f\n", compm);
 
      fclose(f);
      return g;

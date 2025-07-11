@@ -78,6 +78,21 @@ typedef struct{
      Lista rapido;
 }Percurso;
 
+double curtoWeight(Graph g, double pai, Edge e, Node objective){
+     return pai+getEdgeComp(g, e);
+}
+double rapidoWeight(Graph g, double pai, Edge e, Node objective){
+     return pai+(getEdgeComp(g, e)/getEdgeVelMedia(g, e));
+}
+double curtoCost(Graph g, double pai, Edge e, Node objective){
+     return pai+getEdgeComp(g, e) + 
+          (abs(getNodeX(g, getToNode(g, e))-getNodeX(g, objective)) + abs(getNodeY(g, getToNode(g, e))-getNodeY(g, objective)))/2.;
+}
+double rapidoCost(Graph g, double pai, Edge e, Node objective){
+     return pai+(getEdgeComp(g, e)+ (abs(getNodeX(g, getToNode(g, e))-getNodeX(g, objective)) + 
+                    abs(getNodeY(g, getToNode(g, e))-getNodeY(g, objective)))/4.)/(getEdgeVelMedia(g, e)*4.);
+}
+
 void comandosQuery(SmuTreap t, Graph g, char* fn, char* saida){
      printf("arquivo query: %s\n", fn);
      FILE* f=fopen(fn, "r");
@@ -168,8 +183,6 @@ seleciona:
                fscanf(f, "%s" , reg2);
                int reg1Id=atoi(reg1+1);
                int reg2Id=atoi(reg2+1);
-               //NodeSmut from=getNodeSmuT(t, regs[reg1Id].x, regs[reg1Id].y);
-               //NodeSmut to=getNodeSmuT(t, regs[reg2Id].x, regs[reg2Id].y);
                double fromMenorDist=999999;
                double toMenorDist=999999;
                Node from;
@@ -190,8 +203,8 @@ seleciona:
                strcpy(percurso->nome, np);
                printf("from %i to %i\n", from, to);
 
-               percurso->curto=caminhoCurto(g, from, to);
-               percurso->rapido=caminhoRapido(g, from, to);
+               percurso->curto=caminho(g, from, to, &curtoWeight, &curtoWeight);
+               percurso->rapido=caminho(g, from, to, &rapidoWeight, &rapidoWeight);
                insertList(percursos, percurso, 0);
           }else if(strcmp(comando, "shw")==0){
                char np[32];
@@ -208,17 +221,17 @@ seleciona:
                     }
                }
                Node* to;
-               for (int i=0; to=getValor(per->curto, i+1); i++) {
+               for (int i=1; to=getValor(per->curto, i+1); i++) {
                     Node from=*(Node*)getValor(per->curto, i);
-                    printf("from %i to %i\n", from, *to);
                     insertSmuT(t, getNodeX(g, from), getNodeY(g, from), 
                               criaLinha(0, getNodeX(g, from), getNodeY(g, from), getNodeX(g, *to), getNodeY(g, *to), cmc), LINHA, &calculabb);
                }
-               for (int i=0; to=getValor(per->rapido, i+1); i++) {
+               for (int i=1; to=getValor(per->rapido, i+1); i++) {
                     Node from=*(Node*)getValor(per->rapido, i);
-                    printf("from %i to %i\n", from, *to);
-                    insertSmuT(t, getNodeX(g, from), getNodeY(g, from), 
-                              criaLinha(0, getNodeX(g, from)-5, getNodeY(g, from)-5, getNodeX(g, *to)-5, getNodeY(g, *to)-5, cmr), LINHA, &calculabb);
+                    //printf("from %i to %i\n", from, *to);
+                    insertSmuT(t, getNodeX(g, from)-5, getNodeY(g, from)-5, 
+                              criaLinha(0, getNodeX(g, from)-5, getNodeY(g, from)-5, getNodeX(g, *to)-5, getNodeY(g, *to)-5, cmr),
+                              LINHA, &calculabb);
                }
           }    
      }

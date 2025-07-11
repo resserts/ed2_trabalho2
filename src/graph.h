@@ -46,6 +46,7 @@ typedef bool (*procEdge)(Graph g, Edge e, double* td, double* tf, void *extra);
  */
 typedef bool (*dfsRestarted)(Graph g, void *extra);
 
+typedef double (*nodeWeight)(Graph g, double pastWeight, Edge e, Node objective); 
 
 
 /*
@@ -120,6 +121,11 @@ Node getToNode(Graph g, Edge e);
  */
 Info getEdgeInfo(Graph g, Edge e);
 
+double getEdgeComp(Graph g, Edge e);
+
+
+double getEdgeVelMedia(Graph g, Edge e);
+
 
 /*
  */
@@ -178,10 +184,8 @@ bool bfs(Graph g, Node n, Node discoverNode, void *extra);
 
 
 
-Lista caminhoCurto(Graph g, Node from, Node to);
+Lista caminho(Graph g, Node from, Node to, nodeWeight nw, nodeWeight nc);
 
-
-Lista caminhoRapido(Graph g, Node from, Node to);
 
 /*
    Destroi o grafo "g".
