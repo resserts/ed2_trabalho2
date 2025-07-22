@@ -1,30 +1,41 @@
 #include "svg.h"
 #include "graph.h"
 #include "lista.h"
+#include "path.h"
 #include "retangulo.h"
 #include "circulo.h"
 #include "linha.h"
 #include "texto.h"
 #include "quadra.h"
+#include "path.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 
-typedef struct{
-     double x, y;
-     char l;
-}StLetra;
 
-Letra criaLetra(double x, double y, char l){
-     StLetra* letra=(StLetra*)malloc(sizeof(StLetra));
-     letra->l=l;
-     letra->x=x;
-     letra->y=y;
-}
-void svgLetras(FILE* f, Lista letras){
-     for(int i=0; getValor(letras, i); i++){
-          StLetra* letra=getValor(letras, i);
-          fprintf(f, "<text x=\"%f\" y=\"%f\" fill=\"#ff0000\" font-family=\"sans\" font-size=\"12px\" text-anchor=\"middle\" >%c</text>\n",letra->x, letra->y, letra->l);
+void svgPath(FILE* f, Lista paths, Graph g){
+     Info path;
+     for(int i=0; (path=getValor(paths, i)); i++){
+          Lista perc=getPath(path);
+          int desloc=0;
+          if(getPathId(path)==1){
+               desloc=5;
+
+          }
+          Node* n=getValor(perc, 0);
+          fprintf(f, "<path d=\"M %f %f", getNodeX(g, *n)-desloc, getNodeY(g, *n)-desloc);
+          for (int j=1; (n=getValor(perc, j)); j++) {
+               fprintf(f, " L %f %f", getNodeX(g, *n)-desloc, getNodeY(g, *n)-desloc);
+          }
+          fprintf(f, "\" stroke=\"%s\" stroke-width=\"4\" fill=\"none\" />\n", getPathCor(path));
+
+          n=getValor(perc, 0);
+          fprintf(f, "<circle r=\"5\" fill=\"black\">\n");
+          fprintf(f, "\t<animateMotion dur=\"10s\" repeatCount=\"indefinite\" path=\"M %f %f", getNodeX(g, *n)-desloc, getNodeY(g, *n)-desloc);
+          for (int j=1; (n=getValor(perc, j)); j++) {
+               fprintf(f, " L %f %f", getNodeX(g, *n)-desloc, getNodeY(g, *n)-desloc);
+          }
+          fprintf(f, "\" />\n</circle>\n");
      }
 }
 
@@ -69,9 +80,7 @@ void svgNo(SmuTreap t, NodeSmut n, Info i, double x, double y, void *aux){
           case RETANGULO:
                fprintf(aux, "<rect x=\"%f\" y=\"%f\" width=\"%f\" height=\"%f\" stroke=\"%s\" fill=\"%s\" ",
                          x, y, getRetWidth(i), getRetHeight(i), getRetCorb(i), getRetCorp(i));
-               if(getRetId(i)==-1){
-                    fprintf(aux, "fill-opacity=\"0\" ");
-               }
+               fprintf(aux, "fill-opacity=\"%s\" ", getRetTransp(i));
                fprintf(aux, "/>\n"); 
                break;
           case CIRCULO:
@@ -147,7 +156,7 @@ bool crossEdge(Graph g, Edge e, double* td, double* tf, void *extra){
      fprintf(extra, "<line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" stroke=\"%s\" />\n",
                fromX, fromY, toX, toY, cor);
 }
-void gerarSvg(SmuTreap t, char* fn, Lista letras, Graph g){
+void gerarSvg(SmuTreap t, char* fn, Lista paths, Graph g){
      FILE* f=fopen(fn, "w");
      if(f==NULL){
           return;
@@ -157,8 +166,8 @@ void gerarSvg(SmuTreap t, char* fn, Lista letras, Graph g){
      fprintf(f, "<svg version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\">\n");
 
      visitaProfundidadeSmuT(t, &svgNo, f);
-     if(letras!=NULL){
-          svgLetras(f, letras);
+     if(paths!=NULL){
+          svgPath(f, paths, g);
      }
      if(g!=NULL){
           //graphSvg(g, f);

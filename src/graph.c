@@ -176,6 +176,18 @@ void setEdgeInfo(Graph g, Edge e, Info info){
      et->info=info;
 }
 
+
+bool getEdgeHabil(Graph g, Edge e){
+     EdgeSt* et=e;
+     return et->habilitada;
+}
+
+
+void setEdgeHabil(Graph g, Edge e, bool setar){
+     EdgeSt* et=e;
+     et->habilitada=setar;
+}
+
 void removeEdge(Graph g, Edge e){
      GraphSt* gt=g;
      for(int i=0; getValor(gt->edges, i); i++){
@@ -419,7 +431,7 @@ Lista caminho(Graph g, Node from, Node to, nodeWeight nw, nodeWeight nc){
           EdgeSt* et;
           removeList(fila, 0);
           tamanhoLista--;
-          for(int i=0; et=getValor(gt->edges[*next], i); i++){
+          for(int i=0; (et=getValor(gt->edges[*next], i)) && et->habilitada; i++){
                double newWeight=nw(g, infos[*next].w, et, to);
                if(infos[et->n2].w>newWeight){
                     infos[et->n2].w=newWeight;

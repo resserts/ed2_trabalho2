@@ -8,7 +8,7 @@
 #include "linha.h"
 #include "texto.h"
 
-enum tipo{RETANGULO, CIRCULO, LINHA, TEXTO, QUADRA, VERTICE};
+enum tipo{RETANGULO, CIRCULO, LINHA, TEXTO, QUADRA, VERTICE, PATH};
 typedef void* Letra;
 
 Letra criaLetra(double x, double y, char l);

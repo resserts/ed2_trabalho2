@@ -1,4 +1,5 @@
 #include "graph.h"
+#include "lista.h"
 #include "smutreap.h"
 #include "svg.h"
 #include "geo.h"
@@ -71,13 +72,14 @@ int main(int argc, char* argv[]){
      char saida[MAX_PATH_LEN];
      strcpy(saida, BSD);
      strcat(saida, arq);
-     comandosQuery(smut, g, queryArq, saida);
+     Lista paths=criaLista();
+     comandosQuery(smut, g, paths, queryArq, saida);
 
      char svgArq[MAX_PATH_LEN];
      strcpy(svgArq, BSD);
      strcat(svgArq, arq);
      strcat(svgArq, ".svg");
-     gerarSvg(smut, svgArq, NULL, g);
+     gerarSvg(smut, svgArq, paths, g);
 
      clock_t end=clock();
      double time_spent=(double)(end-start) / CLOCKS_PER_SEC;

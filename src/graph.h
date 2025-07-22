@@ -132,6 +132,12 @@ double getEdgeVelMedia(Graph g, Edge e);
 void setEdgeInfo(Graph g, Edge e, Info info);
 
 
+bool getEdgeHabil(Graph g, Edge e);
+
+
+void setEdgeHabil(Graph g, Edge e, bool setar);
+
+
 /*
  */
 void removeEdge(Graph g, Edge e);

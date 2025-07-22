@@ -1,5 +1,6 @@
 #include "query.h"
 #include "graph.h"
+#include "path.h"
 #include "retangulo.h"
 #include "quadra.h"
 #include "circulo.h"
@@ -93,7 +94,7 @@ double rapidoCost(Graph g, double pai, Edge e, Node objective){
                     abs(getNodeY(g, getToNode(g, e))-getNodeY(g, objective)))/4.)/(getEdgeVelMedia(g, e)*4.);
 }
 
-void comandosQuery(SmuTreap t, Graph g, char* fn, char* saida){
+void comandosQuery(SmuTreap t, Graph g, Lista paths, char* fn, char* saida){
      printf("arquivo query: %s\n", fn);
      FILE* f=fopen(fn, "r");
      if(f==NULL){
@@ -111,7 +112,7 @@ void comandosQuery(SmuTreap t, Graph g, char* fn, char* saida){
      }
      while(fscanf(f, "%s", comando)!=EOF){
           printf("comando: %s\n", comando);
-          if(strcmp(comando, "selr")==0){
+          if(strcmp(comando, "alag")==0){
                int n;
                double x, y;
                double w, h;
@@ -132,9 +133,36 @@ void comandosQuery(SmuTreap t, Graph g, char* fn, char* saida){
                sel=criaSelecao(n);
 seleciona:
                //printf("x: %f, y: %f, w:");
-               if(getInfosDentroRegiaoSmuT(t, x, y, x+w, y+h, &bbDentro, sel->l)){
-                    printf("acho info");
+               Lista arestas=criaLista();
+               getEdges(g, arestas);
+               Edge e;
+               for (int i=0; (e=getValor(arestas, i)); i++) {
+                    Node to=getToNode(g, e);
+                    if(getNodeX(g, to)>=x && getNodeX(g, to)<=x+w && getNodeY(g, to)>=y && getNodeY(g, to)<=y+h){
+                         insertList(sel->l, e, 0);
+                         setEdgeHabil(g, e, false);
+                    }
                }
+
+               insertSmuT(t, x, y, criaRetangulo(0, x, y, w, h, "#AA0044", "#AB37C8", "0.5"), RETANGULO, &calculabb);
+               insertList(listas, sel, 0);
+          }else if(strcmp(comando, "dren")==0){
+               int n;
+               fscanf(f, "%i" , &n);
+               Selecao* sel;
+               for(int i=0; getValor(listas, i); i++){
+                    sel=getValor(listas, i);
+                    printf("%i==%i\n", sel->n, n);
+                    if(sel->n==n){
+                         printf("acho\n");
+                         Edge e;
+                         for(int i=0; (e=getValor(sel->l, i)); i++){
+                              setEdgeHabil(g, e, true);
+                         }
+                         break;
+                    }
+               }
+
           }else if(strcmp(comando, "@o?")==0){
                char reg[10];
                char cep[MAX_STR_LEN];
@@ -206,6 +234,47 @@ seleciona:
                percurso->curto=caminho(g, from, to, &curtoWeight, &curtoWeight);
                percurso->rapido=caminho(g, from, to, &rapidoWeight, &rapidoWeight);
                insertList(percursos, percurso, 0);
+          }else if(strcmp(comando, "join")==0){
+               char np[32];
+               char np1[32];
+               char np2[32];
+               fscanf(f, "%s" , np);
+               fscanf(f, "%s" , np1);
+               fscanf(f, "%s" , np2);
+               Percurso* per1=NULL;
+               Percurso* p=NULL;
+               for (int i=0; (p=getValor(percursos, i)); i++) {
+                    if(strcmp(p->nome, np1)==0){
+                         per1=p;
+                         break;
+                    }
+               }
+               if(per1==NULL){
+                    continue;
+               }
+               Percurso* per2=NULL;
+               for (int i=0; (p=getValor(percursos, i)); i++) {
+                    if(strcmp(p->nome, np1)==0){
+                         per2=p;
+                         break;
+                    }
+               }
+               if(per2==NULL){
+                    continue;
+               }
+               Percurso* percurso=(Percurso*)malloc(sizeof(Percurso));
+               strcpy(percurso->nome, np);
+               percurso->curto=criaLista();
+               percurso->rapido=criaLista();
+               Node* n;
+               for (int i=0; (n=getValor(per1->curto, i)); i++) {
+                    insertList(percurso->curto, n, 9999999);
+               }
+               for (int i=0; (n=getValor(per1->rapido, i)); i++) {
+                    insertList(percurso->rapido, n, 9999999);
+               }
+
+               insertList(percursos, percurso, 0);
           }else if(strcmp(comando, "shw")==0){
                char np[32];
                char cmc[32];
@@ -220,25 +289,18 @@ seleciona:
                          break;
                     }
                }
-               Node* to;
-               for (int i=1; to=getValor(per->curto, i+1); i++) {
-                    Node from=*(Node*)getValor(per->curto, i);
-                    insertSmuT(t, getNodeX(g, from), getNodeY(g, from), 
-                              criaLinha(0, getNodeX(g, from), getNodeY(g, from), getNodeX(g, *to), getNodeY(g, *to), cmc), LINHA, &calculabb);
-               }
-               for (int i=1; to=getValor(per->rapido, i+1); i++) {
-                    Node from=*(Node*)getValor(per->rapido, i);
-                    //printf("from %i to %i\n", from, *to);
-                    insertSmuT(t, getNodeX(g, from)-5, getNodeY(g, from)-5, 
-                              criaLinha(0, getNodeX(g, from)-5, getNodeY(g, from)-5, getNodeX(g, *to)-5, getNodeY(g, *to)-5, cmr),
-                              LINHA, &calculabb);
-               }
+
+               printf("vai inseri\n");
+               insertList(paths, criaPath(0, per->curto, cmc), 0);
+               printf("inseriu 1\n");
+               insertList(paths, criaPath(1, per->rapido, cmr), 0);
+               printf("inseriu otro\n");
           }    
      }
      for (int i=0; getValor(listas, i); i++) {
           Selecao* sel=getValor(listas, i);
-          killLista(sel->l);
-          free(sel);
+          //killLista(sel->l);
+          //free(sel);
      }
      killLista(listas);
 

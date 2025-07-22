@@ -9,9 +9,10 @@ typedef struct{
      double w, h;
      char corb[30];
      char corp[30];
+     char transp[30];
 }StRetangulo;
 
-Info criaRetangulo(int i, double x, double y, double w, double h, char* corb, char* corp){
+Info criaRetangulo(int i, double x, double y, double w, double h, char* corb, char* corp, char* transp){
      StRetangulo* ret= (StRetangulo*)malloc(sizeof(StRetangulo));
      ret->id=i;
      ret->x=x;
@@ -20,6 +21,7 @@ Info criaRetangulo(int i, double x, double y, double w, double h, char* corb, ch
      ret->h=h;
      strcpy(ret->corb, corb);
      strcpy(ret->corp, corp);
+     strcpy(ret->transp, transp);
      return ret;
 }
 
@@ -56,4 +58,8 @@ char* getRetCorb(Info i){
 char* getRetCorp(Info i){
      StRetangulo* ret=(StRetangulo*)i;
      return ret->corp;
+}
+char* getRetTransp(Info i){
+     StRetangulo* ret=(StRetangulo*)i;
+     return ret->transp;
 }
