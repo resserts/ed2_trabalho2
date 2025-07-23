@@ -126,6 +126,11 @@ double getEdgeComp(Graph g, Edge e);
 
 double getEdgeVelMedia(Graph g, Edge e);
 
+char* getEdgeName(Graph g, Edge e);
+
+char* getEdgeLDir(Graph g, Edge e);
+
+char* getEdgeLEsq(Graph g, Edge e);
 
 /*
  */

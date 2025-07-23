@@ -163,7 +163,7 @@ void gerarSvg(SmuTreap t, char* fn, Lista paths, Graph g){
      }
 
      fprintf(f, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-     fprintf(f, "<svg version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\">\n");
+     fprintf(f, "<svg version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" height=\"100%\" width=\"100%\" >\n");
 
      visitaProfundidadeSmuT(t, &svgNo, f);
      if(paths!=NULL){

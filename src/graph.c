@@ -27,7 +27,14 @@ typedef struct {
      int maxNodes;
      NodeSt* nodes;
      Lista* edges;
+     Lista subGraphs;
 }GraphSt;
+typedef struct{
+     char nome[MAX_STR_LEN];
+     Node* nodes;
+     Lista* edges;
+     int nVerts;
+}SubGraphSt;
 
 Graph createGraph(int nVert, bool directed){
      GraphSt* gt=malloc(sizeof(GraphSt));
@@ -38,6 +45,7 @@ Graph createGraph(int nVert, bool directed){
      for(int i=0; i<gt->maxNodes; i++){
           gt->edges[i]=criaLista();
      }
+     gt->subGraphs=criaLista();
      return gt;
 }
 
@@ -169,6 +177,21 @@ double getEdgeVelMedia(Graph g, Edge e){
      return et->vm;
 }
 
+
+char* getEdgeName(Graph g, Edge e){
+     EdgeSt* et=e;
+     return et->nome;
+}
+
+char* getEdgeLDir(Graph g, Edge e){
+     EdgeSt* et=e;
+     return et->ldir;
+}
+
+char* getEdgeLEsq(Graph g, Edge e){
+     EdgeSt* et=e;
+     return et->lesq;
+}
 
 
 void setEdgeInfo(Graph g, Edge e, Info info){
@@ -495,3 +518,75 @@ void killDG(Graph g){
      free(gt->nodes);
      free(gt);
 }
+
+/*    
+Calcula o subgrafo composto  pelos vertices cujos nomes estao no vetor nomesVerts
+(nVerts e' o tamanho deste vetor). Caso comAresta seja true calcula o subgrafo 
+induzido pelos vertices em nomesVers
+ */
+void createSubgraphDG(Graph g, char *nomeSubgrafo, char *nomesVerts[], int nVert,
+		       bool comArestas){
+     GraphSt* gt=g;
+     SubGraphSt* sgt=(SubGraphSt*)malloc(sizeof(SubGraphSt));
+     strcpy(sgt->nome, nomeSubgrafo);
+     sgt->nodes=(Node*)malloc(sizeof(Node)*nVert);
+     for (int i=0; i<nVert; i++) {
+          sgt->nodes[i]=getNode(g, nomesVerts[i]);
+     }
+     sgt->edges=(Lista*)malloc(sizeof(Lista)*getTotalNodes(g));
+     for (int i=0; i<getTotalNodes(g); i++) {
+          sgt->edges[i]=criaLista();
+     }
+     if(comArestas){
+          for (int i=0; i<nVert; i++) {
+               EdgeSt* et;
+               for (int j=0; (et=getValor(gt->edges[sgt->nodes[i]], j)); j++) {
+               
+               }
+               
+          }
+     }
+     sgt->nVerts=nVert;
+     insertList(gt->subGraphs, sgt, 0);
+}
+
+
+/*
+    Adiciona a aresta ao subgrafo.
+ */
+Edge includeEdgeSDG(Graph g, char *nomeSubgrafo, Edge e);
+
+/*
+  Retorna verdadeiro se a aresta "e" pertence ao subgrafo "nomeSubgrafo" do grafo g; 
+  falso, caso contrario.
+ */
+bool existsEdgeSDG(Graph g, char *nomeSubgrafo, Edge e);
+
+/*
+  Retira a aresta "e" do subgrafo "nomeSubgrafo". Ou seja, desfaz a correspondente 
+  operacao includeEdgeSg previamente executada. 
+  Note que a aresta  "e" NAO e' removida do grafo g.
+ */
+void excludeEdgeSDG(Graph g, char *nomeSubgrafo, Edge e);
+
+/*
+   Adiciona 'a lista "arestaAdjacentes" as arestas (x,y), tal que:
+   x == node; x pertence ao subgrafo "nomeSubgrafo", (x,y) tambem e' aresta
+   do subgrafo.
+ */
+void adjacentEdgesSDG(Graph g, char *nomeSubgrafo, Node n, Lista arestasAdjacentes);
+
+/*
+   Adiciona 'a lista "lstNodes" (Lista<Node>) os nós do subgrafo "nomeSubgrafo".
+ */
+void getAllNodesSDG(Graph g, char *nomeSubgrafo,  Lista lstNodes);
+
+/*
+   Adiciona 'a lista "lstEdges" (Lista<Edge>) as arestas do subgrafo "nomeSubgrafo".
+ */
+void getAllEdgesSDG(Graph g, char *nomeSubgrafo, Lista lstEdges);
+
+/*
+  Novo grafo.
+ */
+Graph produceGraph(Graph g, char* nomeSubgrafo);
