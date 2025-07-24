@@ -14,6 +14,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 typedef struct{
      int n;
@@ -95,7 +96,6 @@ double rapidoCost(Graph g, double pai, Edge e, Node objective){
 }
 
 void comandosQuery(SmuTreap t, Graph g, Lista paths, char* fn, char* saida){
-     printf("arquivo query: %s\n", fn);
      FILE* f=fopen(fn, "r");
      if(f==NULL){
           printf("não foi possível acessar arquivo query\n");
@@ -112,7 +112,6 @@ void comandosQuery(SmuTreap t, Graph g, Lista paths, char* fn, char* saida){
      }
      FILE* fTxt=fopen(strcat(saida, ".txt"), "w");
      while(fscanf(f, "%s", comando)!=EOF){
-          printf("comando: %s\n", comando);
           if(strcmp(comando, "alag")==0){
                int n;
                double x, y;
@@ -133,7 +132,6 @@ void comandosQuery(SmuTreap t, Graph g, Lista paths, char* fn, char* saida){
                }
                sel=criaSelecao(n);
 seleciona:
-               //printf("x: %f, y: %f, w:");
                Lista arestas=criaLista();
                getEdges(g, arestas);
                Edge e;
@@ -160,9 +158,7 @@ seleciona:
                fprintf(fTxt, "Arestas reabilitadas:\n");
                for(int i=0; getValor(listas, i); i++){
                     sel=getValor(listas, i);
-                    printf("%i==%i\n", sel->n, n);
                     if(sel->n==n){
-                         printf("acho\n");
                          Edge e;
                          for(int i=0; (e=getValor(sel->l, i)); i++){
                               if(getEdgeHabil(g, e)){
@@ -174,6 +170,36 @@ seleciona:
                     }
                }
 
+          }else if(strcmp(comando, "sg")==0){
+               char nome[MAX_STR_LEN];
+               double x, y;
+               double w, h;
+               fscanf(f, "%s" , nome);
+               fscanf(f, "%lf" , &x);
+               fscanf(f, "%lf" , &y);
+               fscanf(f, "%lf" , &w);
+               fscanf(f, "%lf" , &h);
+
+
+
+               int nVerts=0;
+               Lista nodes=criaLista();
+               for(int i=0; i<getTotalNodes(g);i++){
+                    if(getNodeX(g, i)>=x && getNodeX(g, i)<=x+w && getNodeY(g, i)>=y && getNodeY(g, i)<=y+h){
+                         Node* n=(Node*)malloc(sizeof(Node));
+                         *n=i;
+                         insertList(nodes, n, 999999);
+                         nVerts++;
+                    }
+               }
+               char** nomesVerts=(char**)malloc(sizeof(char*)*nVerts);
+               for (int i=0; i<nVerts; i++) {
+                    nomesVerts[i]=(char*)malloc(sizeof(char)*MAX_STR_LEN);
+                    strcpy(nomesVerts[i], getNodeName(g, *(Node*)getValor(nodes, i)));
+               }
+               createSubgraphDG(g, nome, nomesVerts, nVerts, true);
+               insertSmuT(t, x, y, criaRetangulo(-1, x, y, w, h, "red", "white", "0"), 
+                         RETANGULO, &calculabb);
           }else if(strcmp(comando, "@o?")==0){
                char reg[10];
                char cep[MAX_STR_LEN];
@@ -183,7 +209,6 @@ seleciona:
                fscanf(f, "%s" , cep);
                fscanf(f, " %c" , &face);
                fscanf(f, "%lf" , &num);
-               printf("@0? %s %s %c %lf\n", reg, cep, face, num);
                NodeSmut quadra=procuraNoSmuT(t, &getQuadra, cep);
                int regId=atoi(reg+1);
                switch (face) {
@@ -207,13 +232,12 @@ seleciona:
                          break;
                }
                insertSmuT(t, regs[regId].x, regs[regId].y, 
-                         criaLinha(0, regs[regId].x, regs[regId].y, regs[regId].x, 10, "darkred"), LINHA, &calculabb);
+                         criaLinha(-1, regs[regId].x, regs[regId].y, regs[regId].x, 10, "darkred"), LINHA, &calculabb);
                insertSmuT(t, regs[regId].x, 10, 
                          criaTexto(0, regs[regId].x, 10, "black", "black", 'm', reg), TEXTO, &calculabb);
 
                fprintf(fTxt, "\n\n==========@o?==========\n");
                fprintf(fTxt, "%s = (%f, %f)\n", reg, regs[regId].x, regs[regId].y);
-               //printf("x1: %lf\t y1: %lf\nx2: %lf\t y2: 10\n", regs[regId].x, regs[regId].y, regs[regId].x);
           }else if(strcmp(comando, "p?")==0){
                char np[32];
                char nome[MAX_STR_LEN];
@@ -229,13 +253,19 @@ seleciona:
                double toMenorDist=999999;
                Node from;
                Node to;
-               for(int i=0; i<getTotalNodes(g); i++){
-                    double distFrom=pow(getNodeX(g, i)-regs[reg1Id].x, 2)+pow(getNodeY(g, i)-regs[reg1Id].y, 2);
+               Graph grafo;
+               if(strcmp(nome, "-")==0){
+                    grafo=g;
+               }else{
+                    grafo=g;
+               }
+               for(int i=0; i<getTotalNodes(grafo); i++){
+                    double distFrom=pow(getNodeX(grafo, i)-regs[reg1Id].x, 2)+pow(getNodeY(grafo, i)-regs[reg1Id].y, 2);
                     if(distFrom<fromMenorDist){
                          from=i;
                          fromMenorDist=distFrom;
                     }
-                    double distTo=pow(getNodeX(g, i)-regs[reg2Id].x, 2)+pow(getNodeY(g, i)-regs[reg2Id].y, 2);
+                    double distTo=pow(getNodeX(grafo, i)-regs[reg2Id].x, 2)+pow(getNodeY(grafo, i)-regs[reg2Id].y, 2);
                     if(distTo<toMenorDist){
                          to=i;
                          toMenorDist=distTo;
@@ -243,24 +273,34 @@ seleciona:
                }
                Percurso* percurso=(Percurso*)malloc(sizeof(Percurso));
                strcpy(percurso->nome, np);
-               printf("from %i to %i\n", from, to);
-
-               percurso->curto=caminho(g, from, to, &curtoWeight, &curtoWeight);
-               percurso->rapido=caminho(g, from, to, &rapidoWeight, &rapidoWeight);
-               insertList(percursos, percurso, 0);
                fprintf(fTxt, "\n\n==========p?==========\n");
-               Node* nTo;
-               Node* nFrom=getValor(percurso->curto, 0);
-               fprintf(fTxt, "Caminho Curto ");
-               for (int i=1; (nTo=getValor(percurso->curto, i)); i++) {
-                    fprintf(fTxt, "=>(%.1f, %.1f)", getNodeX(g, *nTo), getNodeY(g, *nTo));
-                    nFrom=nTo;
+
+               percurso->curto=caminho(grafo, from, to, &curtoWeight, &curtoWeight);
+               percurso->rapido=caminho(grafo, from, to, &rapidoWeight, &rapidoWeight);
+               if(percurso->curto==NULL){
+                    percurso->curto=criaLista();
+                    Node* n=(Node*)malloc(sizeof(Node));
+                    *n=to;
+                    insertList(percurso->curto, n, 0);
+                    n=(Node*)malloc(sizeof(Node));
+                    *n=from;
+                    insertList(percurso->curto, n, 0);
+                    fprintf(fTxt, "Nao foi possivel encontrar um caminho\n");
+               }else{
+                    Node* nTo;
+                    Node* nFrom=getValor(percurso->curto, 0);
+                    fprintf(fTxt, "Caminho Curto ");
+                    for (int i=1; (nTo=getValor(percurso->curto, i)); i++) {
+                         fprintf(fTxt, "=>(%.1f, %.1f)", getNodeX(grafo, *nTo), getNodeY(grafo, *nTo));
+                         nFrom=nTo;
+                    }
+                    fprintf(fTxt, "\n\nCaminho Rapido ");
+                    for (int i=1; (nTo=getValor(percurso->rapido, i)); i++) {
+                         fprintf(fTxt, "=>(%.1f, %.1f)", getNodeX(grafo, *nTo), getNodeY(grafo, *nTo));
+                         nFrom=nTo;
+                    }
                }
-               fprintf(fTxt, "\n\nCaminho Rapido ");
-               for (int i=1; (nTo=getValor(percurso->rapido, i)); i++) {
-                    fprintf(fTxt, "=>(%.1f, %.1f)", getNodeX(g, *nTo), getNodeY(g, *nTo));
-                    nFrom=nTo;
-               }
+               insertList(percursos, percurso, 0);
           }else if(strcmp(comando, "join")==0){
                char np[32];
                char np1[32];
@@ -289,7 +329,6 @@ seleciona:
                if(per2==NULL){
                     continue;
                }
-               printf("per1=%s\t per2=%s\n", per1->nome, per2->nome);
                Percurso* percurso=(Percurso*)malloc(sizeof(Percurso));
                strcpy(percurso->nome, np);
                percurso->curto=criaLista();
@@ -327,23 +366,18 @@ seleciona:
                fscanf(f, "%s" , cmr);
                Percurso* per;
                for(int i=0; per=getValor(percursos, i); i++){
-                    printf("nome perc: %s\n", per->nome);
                     if(strcmp(per->nome, np)==0){
-                         printf("vai inseri\n");
+                         if(per->rapido==NULL){
+                              insertList(paths, criaPath(-1, per->curto, "red"), 0);
+                              break;
+                         }
                          insertList(paths, criaPath(0, per->curto, cmc), 0);
-                         printf("inseriu 1\n");
                          insertList(paths, criaPath(1, per->rapido, cmr), 0);
-                         printf("inseriu otro\n");
                          break;
                     }
                }
 
           }    
-     }
-     for (int i=0; getValor(listas, i); i++) {
-          Selecao* sel=getValor(listas, i);
-          //killLista(sel->l);
-          //free(sel);
      }
      killLista(listas);
 

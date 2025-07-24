@@ -23,6 +23,7 @@ typedef struct {
      Info info;
 }EdgeSt;
 typedef struct {
+     char nome[MAX_STR_LEN];
      bool directed;
      int maxNodes;
      NodeSt* nodes;
@@ -36,8 +37,9 @@ typedef struct{
      int nVerts;
 }SubGraphSt;
 
-Graph createGraph(int nVert, bool directed){
+Graph createGraph(int nVert, bool directed, char* nome){
      GraphSt* gt=malloc(sizeof(GraphSt));
+     strcpy(gt->nome, nome);
      gt->directed=directed;
      gt->maxNodes=nVert;
      gt->nodes=calloc(sizeof(NodeSt), gt->maxNodes);
@@ -68,7 +70,6 @@ int getTotalNodes(Graph g){
 
 Node addNode(Graph g, double x, double y, char* nome, Info info){
      if(getTotalNodes(g)>=getMaxNodes(g)){
-          printf("tacheio\n");
           return -1;
      }
      int id=getTotalNodes(g);
@@ -280,7 +281,6 @@ typedef struct{
      int td, tf;
      Node pai;
 }dfsNInfo;
-
 bool dfsaux(GraphSt* gt, Node n, dfsNInfo* infos, int* tempo, procEdge treeEdge, procEdge forwardEdge, procEdge returnEdge,
 	 procEdge crossEdge, void *extra){
 
@@ -321,12 +321,6 @@ bool dfsaux(GraphSt* gt, Node n, dfsNInfo* infos, int* tempo, procEdge treeEdge,
      infos[n].tf=*tempo;
      infos[n].cor='p';
 }
-/*
-   Faz percurso em profundidade sobre  g, a partir do no' node, classificando 
-   as arestas do grafo, invocando a respectiva funcao.
-      A busca em profundidade, eventualmente, pode produzir uma floresta.
-   newTree e' invocada sempre que o percurso for retomado.
- */  
 bool dfs(Graph g, Node n, procEdge treeEdge, procEdge forwardEdge, procEdge returnEdge,
 	 procEdge crossEdge, dfsRestarted newTree, void *extra){
      GraphSt* gt=g;
@@ -360,9 +354,6 @@ typedef struct{
      int d;
      Node p;
 }bfsInfo;
-/* Percorre o grafo g em largura, a partir do no' node. discoverNode e' usada
-   para a aresta (x,y) usada para "descobrir" o y.
- */
 bool bfs(Graph g, Node n, Node discoverNode, void *extra){
      GraphSt* gt=g;
      bfsInfo* infos=(bfsInfo*)malloc(sizeof(bfsInfo)*getTotalNodes(g));
@@ -407,7 +398,6 @@ Lista caminho(Graph g, Node from, Node to, nodeWeight nw, nodeWeight nc){
      infos[from].w=0;
      infos[from].c=0;
      Lista fila=criaLista();
-     printf("total: %i\n", getTotalNodes(g));
      for(int i=0; i<getTotalNodes(g); i++){
           if(i!=from){
                Node* n=(Node*)malloc(sizeof(Node));
@@ -424,18 +414,7 @@ Lista caminho(Graph g, Node from, Node to, nodeWeight nw, nodeWeight nc){
           tamanhoLista++;
      }
      for (int w=0; (next=getValor(fila, 0)); w++) {
-          /*
-          for (int z=0; z<10; z++) {
-               Node n=*(Node*)getValor(fila, z);
-               printf("%i(%f) || ", n, infos[n].c);
-          }
-          printf("loop %i || menor cost=%lf\n", w, infos[*next].c);
-          */
           if(*next==to){
-               // TODO: free na fila
-               printf("final weight=%f\n", infos[*next].w);
-               printf("maiorTime=%f\n", maiorTime/CLOCKS_PER_SEC);
-
                fila=criaLista();
                Node p=to;
                while(p>=0){
@@ -443,12 +422,10 @@ Lista caminho(Graph g, Node from, Node to, nodeWeight nw, nodeWeight nc){
                     *n=p;
                     insertList(fila, n, 0);
                     if(p==from){
-                         printf("returno a fila\n");
                          return fila;
                     }
                     p=infos[p].p;
                }
-               printf("returno fila nula\n");
                return NULL;
           }
           EdgeSt* et;
@@ -519,11 +496,6 @@ void killDG(Graph g){
      free(gt);
 }
 
-/*    
-Calcula o subgrafo composto  pelos vertices cujos nomes estao no vetor nomesVerts
-(nVerts e' o tamanho deste vetor). Caso comAresta seja true calcula o subgrafo 
-induzido pelos vertices em nomesVers
- */
 void createSubgraphDG(Graph g, char *nomeSubgrafo, char *nomesVerts[], int nVert,
 		       bool comArestas){
      GraphSt* gt=g;
@@ -541,6 +513,11 @@ void createSubgraphDG(Graph g, char *nomeSubgrafo, char *nomesVerts[], int nVert
           for (int i=0; i<nVert; i++) {
                EdgeSt* et;
                for (int j=0; (et=getValor(gt->edges[sgt->nodes[i]], j)); j++) {
+                    for (int k=0; k<nVert; k++) {
+                         if(et->n2==sgt->nodes[k]){
+                              insertList(sgt->edges[sgt->nodes[i]], et, 0);
+                         }
+                    }
                
                }
                
@@ -551,42 +528,124 @@ void createSubgraphDG(Graph g, char *nomeSubgrafo, char *nomesVerts[], int nVert
 }
 
 
-/*
-    Adiciona a aresta ao subgrafo.
- */
-Edge includeEdgeSDG(Graph g, char *nomeSubgrafo, Edge e);
+bool nodeInSubgraph(SubGraphSt* sgt, Node n){
+     for(int i=0; i<sgt->nVerts; i++){
+          if(sgt->nodes[i]==n){
+               return true;
+          }
+     }
+     return false;
+}
 
-/*
-  Retorna verdadeiro se a aresta "e" pertence ao subgrafo "nomeSubgrafo" do grafo g; 
-  falso, caso contrario.
- */
-bool existsEdgeSDG(Graph g, char *nomeSubgrafo, Edge e);
+Edge includeEdgeSDG(Graph g, char *nomeSubgrafo, Edge e){
+     GraphSt* gt=g;
+     SubGraphSt* sgt;
+     for (int i=0; (sgt=getValor(gt->subGraphs, i)); i++) {
+          if(strcmp(sgt->nome, nomeSubgrafo)){
+               EdgeSt* et=e;
+               if(nodeInSubgraph(sgt, et->n1) && nodeInSubgraph(sgt, et->n2)){
+                    insertList(sgt->edges[et->n1], e, 0);
+                    return e;
+               }
+          }
+     }
+     return NULL;
+}
 
-/*
-  Retira a aresta "e" do subgrafo "nomeSubgrafo". Ou seja, desfaz a correspondente 
-  operacao includeEdgeSg previamente executada. 
-  Note que a aresta  "e" NAO e' removida do grafo g.
- */
-void excludeEdgeSDG(Graph g, char *nomeSubgrafo, Edge e);
+bool existsEdgeSDG(Graph g, char *nomeSubgrafo, Edge e){
+     GraphSt* gt=g;
+     SubGraphSt* sgt;
+     for (int i=0; (sgt=getValor(gt->subGraphs, i)); i++) {
+          if(strcmp(sgt->nome, nomeSubgrafo)){
+               EdgeSt* et=e;
+               EdgeSt* aux;
+               for (int j=0; (aux=getValor(sgt->edges[et->n1], j)); j++) {
+                    if(et==aux){
+                         return true;
+                    }
+               }
+          }
+     }
+     return false;
+}
 
-/*
-   Adiciona 'a lista "arestaAdjacentes" as arestas (x,y), tal que:
-   x == node; x pertence ao subgrafo "nomeSubgrafo", (x,y) tambem e' aresta
-   do subgrafo.
- */
-void adjacentEdgesSDG(Graph g, char *nomeSubgrafo, Node n, Lista arestasAdjacentes);
+void excludeEdgeSDG(Graph g, char *nomeSubgrafo, Edge e){
+     GraphSt* gt=g;
+     SubGraphSt* sgt;
+     for (int i=0; (sgt=getValor(gt->subGraphs, i)); i++) {
+          if(strcmp(sgt->nome, nomeSubgrafo)){
+               EdgeSt* et=e;
+               EdgeSt* aux;
+               for (int j=0; (aux=getValor(sgt->edges[et->n1], j)); j++) {
+                    if(et==aux){
+                         removeList(sgt->edges[et->n1], i);
+                    }
+               }
+          }
+     }
+}
 
-/*
-   Adiciona 'a lista "lstNodes" (Lista<Node>) os nós do subgrafo "nomeSubgrafo".
- */
-void getAllNodesSDG(Graph g, char *nomeSubgrafo,  Lista lstNodes);
+void adjacentEdgesSDG(Graph g, char *nomeSubgrafo, Node n, Lista arestasAdjacentes){
+     GraphSt* gt=g;
+     SubGraphSt* sgt;
+     for (int i=0; (sgt=getValor(gt->subGraphs, i)); i++) {
+          if(strcmp(sgt->nome, nomeSubgrafo)){
+               EdgeSt* aux;
+               for (int j=0; (aux=getValor(sgt->edges[n], j)); j++) {
+                    insertList(arestasAdjacentes, aux, 0);
+               }
+          }
+     }
+}
 
-/*
-   Adiciona 'a lista "lstEdges" (Lista<Edge>) as arestas do subgrafo "nomeSubgrafo".
- */
-void getAllEdgesSDG(Graph g, char *nomeSubgrafo, Lista lstEdges);
+void getAllNodesSDG(Graph g, char *nomeSubgrafo,  Lista lstNodes){
+     GraphSt* gt=g;
+     SubGraphSt* sgt;
+     for (int i=0; (sgt=getValor(gt->subGraphs, i)); i++) {
+          if(strcmp(sgt->nome, nomeSubgrafo)){
+               for (int j=0; j<sgt->nVerts; j++) {
+                    Node* n=(Node*)malloc(sizeof(Node));
+                    *n=sgt->nodes[j];
+                    insertList(lstNodes, n, 0);
+               }
+          }
+     }
+}
 
-/*
-  Novo grafo.
- */
-Graph produceGraph(Graph g, char* nomeSubgrafo);
+void getAllEdgesSDG(Graph g, char *nomeSubgrafo, Lista lstEdges){
+     GraphSt* gt=g;
+     SubGraphSt* sgt;
+     for (int i=0; (sgt=getValor(gt->subGraphs, i)); i++) {
+          if(strcmp(sgt->nome, nomeSubgrafo)){
+               EdgeSt* et;
+               for (int j=0; j<getMaxNodes(g); j++) {
+                    for (int k=0; (et=getValor(sgt->edges[j], k)); k++) {
+                         insertList(lstEdges, et, k);
+                    }
+               }
+          }
+     }
+}
+
+Graph produceGraph(Graph g, char* nomeSubgrafo){
+     GraphSt* gt=g;
+     SubGraphSt* sgt;
+     GraphSt* criado=createGraph(sgt->nVerts, true, nomeSubgrafo);
+     for (int i=0; (sgt=getValor(gt->subGraphs, i)); i++) {
+          if(strcmp(sgt->nome, nomeSubgrafo)){
+               EdgeSt* et;
+               for (int j=0; j<sgt->nVerts; j++) {
+                    for (int k=0; (et=getValor(sgt->edges[sgt->nodes[j]], k)); k++) {
+                         Node to;
+                         for (int l=0; l<sgt->nVerts; l++) {
+                              if(et->n2==sgt->nodes[l]){
+                                   to=l;
+                                   break;
+                              }
+                         }
+                         addEdge(criado, j, to, et->ldir, et->lesq, et->comp, et->vm, et->nome, et->info);
+                    }
+               }
+          }
+     }
+}

@@ -6,16 +6,12 @@
 #include "via.h"
 #include "query.h"
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <time.h>
 
 #define MAX_PATH_LEN 255
 
 
 int main(int argc, char* argv[]){
-     clock_t start=clock();
      char BED[MAX_PATH_LEN]="./";
      char BSD[MAX_PATH_LEN]="./";
      char geo[MAX_PATH_LEN];
@@ -27,8 +23,6 @@ int main(int argc, char* argv[]){
      double promotionRate=1.1;
 
      for(int i=1; i<argc; i++){
-          printf("i: %i\n", i);
-          printf("argv[i]: %s\n", argv[i]);
           if(strcmp(argv[i], "-f")==0){
                i++;
                strcpy(geo, argv[i]);
@@ -71,19 +65,22 @@ int main(int argc, char* argv[]){
      strcat(queryArq, query);
      char saida[MAX_PATH_LEN];
      strcpy(saida, BSD);
-     strcat(saida, arq);
+     for (int i=0; query[i]!='\0'; i++) {
+          if(query[i]=='/'){
+               query[i]='-';
+          }
+     }
+     strcat(saida, query);
+     saida[strlen(saida)-4]='\0';
      Lista paths=criaLista();
      comandosQuery(smut, g, paths, queryArq, saida);
 
      char svgArq[MAX_PATH_LEN];
      strcpy(svgArq, BSD);
-     strcat(svgArq, arq);
+     strcat(svgArq, query);
+     svgArq[strlen(svgArq)-4]='\0';
      strcat(svgArq, ".svg");
      gerarSvg(smut, svgArq, paths, g);
-
-     clock_t end=clock();
-     double time_spent=(double)(end-start) / CLOCKS_PER_SEC;
-     printf("\nexecution time: %lf\n", time_spent);
 
      return 0;
 }

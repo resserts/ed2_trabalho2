@@ -32,9 +32,6 @@ Info criaTexto(int i, double x, double y, char* corb, char* corp, char a, char* 
      strcpy(txt->family, family);
      strcpy(txt->weight, weight);
      strcpy(txt->size, size);
-     printf("family: %s\n", txt->family);
-     printf("weight: %s\n", txt->weight);
-     printf("size: %s\n", txt->size);
      return txt;
 }
 

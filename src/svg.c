@@ -8,7 +8,6 @@
 #include "texto.h"
 #include "quadra.h"
 #include "path.h"
-#include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 
@@ -18,20 +17,25 @@ void svgPath(FILE* f, Lista paths, Graph g){
      for(int i=0; (path=getValor(paths, i)); i++){
           Lista perc=getPath(path);
           int desloc=0;
+          int tempo=30;
+          char dash[MAX_STR_LEN];
           if(getPathId(path)==1){
                desloc=5;
-
+               tempo=15;
+          }
+          if(getPathId(path)==-1){
+               strcpy(dash, " stroke-dasharray=\"10 5\"");
           }
           Node* n=getValor(perc, 0);
           fprintf(f, "<path d=\"M %f %f", getNodeX(g, *n)-desloc, getNodeY(g, *n)-desloc);
           for (int j=1; (n=getValor(perc, j)); j++) {
                fprintf(f, " L %f %f", getNodeX(g, *n)-desloc, getNodeY(g, *n)-desloc);
           }
-          fprintf(f, "\" stroke=\"%s\" stroke-width=\"4\" fill=\"none\" />\n", getPathCor(path));
+          fprintf(f, "\" stroke=\"%s\" stroke-width=\"4\" fill=\"none\"%s />\n", getPathCor(path), dash);
 
           n=getValor(perc, 0);
-          fprintf(f, "<circle r=\"5\" fill=\"black\">\n");
-          fprintf(f, "\t<animateMotion dur=\"10s\" repeatCount=\"indefinite\" path=\"M %f %f", getNodeX(g, *n)-desloc, getNodeY(g, *n)-desloc);
+          fprintf(f, "<circle r=\"7\" fill=\"black\">\n");
+          fprintf(f, "\t<animateMotion dur=\"%is\" repeatCount=\"indefinite\" path=\"M %f %f", tempo, getNodeX(g, *n)-desloc, getNodeY(g, *n)-desloc);
           for (int j=1; (n=getValor(perc, j)); j++) {
                fprintf(f, " L %f %f", getNodeX(g, *n)-desloc, getNodeY(g, *n)-desloc);
           }
@@ -88,8 +92,12 @@ void svgNo(SmuTreap t, NodeSmut n, Info i, double x, double y, void *aux){
                          x, y, getCircRaio(i), getCircCorb(i), getCircCorp(i));
                break;
           case LINHA:
-               fprintf(aux, "<line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" stroke=\"%s\" stroke-width=\"5\" />\n",
-                         x, y, getLinhax2(i), getLinhay2(i), getLinhaCor(i));
+               char dash[MAX_STR_LEN];
+               if(getLinhaId(i)==-1){
+                    strcpy(dash, " stroke-dasharray=\"10 5\"");
+               }
+               fprintf(aux, "<line x1=\"%f\" y1=\"%f\" x2=\"%f\" y2=\"%f\" stroke=\"%s\" stroke-width=\"5\"%s />\n",
+                         x, y, getLinhax2(i), getLinhay2(i), getLinhaCor(i), dash);
                break;
           case TEXTO:
                char* fontWeight=getTxtWeight(i);
@@ -162,8 +170,33 @@ void gerarSvg(SmuTreap t, char* fn, Lista paths, Graph g){
           return;
      }
 
+     double xMax=0;
+     double xMin=99999;
+     double yMax=0;
+     double yMin=99999;
+     if(g!=NULL){
+          int total=getTotalNodes(g);
+          for (int i=0; i<total; i++) {
+               double x=getNodeX(g, i);
+               if(x>xMax){
+                    xMax=x;
+               }else if(x<xMin){
+                    xMin=x;
+               }
+          
+               double y=getNodeY(g, i);
+               if(y>yMax){
+                    yMax=y;
+               }else if(y<yMin){
+                    yMin=y;
+               }
+          }
+
+
+     }
      fprintf(f, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-     fprintf(f, "<svg version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" height=\"100%\" width=\"100%\" >\n");
+     fprintf(f, "<svg version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"%f %f %f %f\" >\n", 
+               xMin, yMin, xMax-xMin, yMax-yMin);
 
      visitaProfundidadeSmuT(t, &svgNo, f);
      if(paths!=NULL){

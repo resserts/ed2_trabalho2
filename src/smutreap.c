@@ -39,7 +39,6 @@ SmuTreap newSmuTreap(int hitCount, double promotionRate, double epsilon, int max
      t->maxPrio=maxPrio;
      t->epsilon=epsilon;
      t->raiz=NULL;
-     printf("Smutreap criada\n");
      return t;
 }
 

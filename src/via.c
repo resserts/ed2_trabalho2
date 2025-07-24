@@ -7,7 +7,6 @@
 #define MAX_STR_LEN 255
 
 Graph comandosVia(char* fn){
-     printf("arquivo via: %s\n", fn);
      FILE* f=fopen(fn, "r");
      if(f==NULL){
           printf("não foi possível acessar arquivo via\n");
@@ -15,9 +14,8 @@ Graph comandosVia(char* fn){
      }
      int nVert; 
      fscanf(f, "%i", &nVert);
-     printf("Max Vertices: %i\n", nVert);
 
-     Graph g=createGraph(nVert, true);
+     Graph g=createGraph(nVert, true, "-");
 
      char comando[5];
      double compM=0;
@@ -25,7 +23,6 @@ Graph comandosVia(char* fn){
      double velM=0;
      double velm=99;
      while(fscanf(f, "%s", comando)!=EOF){
-          //printf("comando: %s\n", comando);
           if(strcmp(comando, "e")==0){
                char v1[MAX_STR_LEN];
                char v2[MAX_STR_LEN];
@@ -63,10 +60,6 @@ Graph comandosVia(char* fn){
                addNode(g, x, y, id, NULL);
           }     
      }
-     printf("maior vel=%f\n", velM);
-     printf("menor vel=%f\n", velm);
-     printf("maior comp=%f\n", compM);
-     printf("menor comp=%f\n", compm);
 
      fclose(f);
      return g;

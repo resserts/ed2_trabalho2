@@ -46,13 +46,15 @@ typedef bool (*procEdge)(Graph g, Edge e, double* td, double* tf, void *extra);
  */
 typedef bool (*dfsRestarted)(Graph g, void *extra);
 
+/* Invocado para calcular os weights atribuidos aos nodes no algoritmo A*
+ */ 
 typedef double (*nodeWeight)(Graph g, double pastWeight, Edge e, Node objective); 
 
 
 /*
-    Cria um grafo com, no maximo, "nVert" vertices.
+    Cria um grafo com, no maximo, "nVert" vertices, direcionado ou nao dependendo de directed e com nome=nome.
  */
-Graph createGraph(int nVert, bool directed);
+Graph createGraph(int nVert, bool directed, char* nome);
 
 
 /*
@@ -79,7 +81,14 @@ Node addNode(Graph g, double x, double y, char* nome, Info info);
 Node getNode(Graph g, char* nome);
 
 
+/* 
+ * Retorna coordenada x do no
+ */
 double getNodeX(Graph g, Node n);
+
+/* 
+ * Retorna coordenada y do no
+ */
 double getNodeY(Graph g, Node n);
 
 /*
@@ -93,11 +102,13 @@ char *getNodeName(Graph g, Node n);
 
 
 /*
+ *
  */
 void setNodeInfo(Graph g, Node n, Info info);
 
 
 /*
+ * Adiciona um edge ao grafo
  */
 Edge addEdge(Graph g, Node from, Node to, char* ldir, char* lesq, double cmp, double vm, char* nome, Info info);
 
@@ -149,6 +160,7 @@ void removeEdge(Graph g, Edge e);
 
 
 /*
+ * Retorna verdadeiro se o Node from for adjacente a to
  */
 bool isAdjacent(Graph g, Node from, Node to);
 
@@ -194,7 +206,9 @@ bool dfs(Graph g, Node n, procEdge treeEdge, procEdge forwardEdge, procEdge retu
 bool bfs(Graph g, Node n, Node discoverNode, void *extra);
 
 
-
+/* Acha no grafo g o caminho de from a to com menor custo usando a funcao nw como peso
+ * e nc como custo=peso+heuristica
+ */
 Lista caminho(Graph g, Node from, Node to, nodeWeight nw, nodeWeight nc);
 
 

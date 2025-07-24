@@ -4,9 +4,15 @@
 
 #include "smutreap.h"
 
+/* Retorna uma quadra com cep=cep, x=x, y=y, largura=w e altura=h
+ */
 Info criaQuadra(char* cep, double x, double y, double w, double h);
 
+/* Muda os atributos usados no svg com os quais as proximas 
+ * quadras serao criadas
+ */ 
 void mudaEstiloQuad(char* strokeWidth, char* corb, char* corp);
+
 char* getQuadCep(Info i);
 double getQuadX(Info i);
 double getQuadY(Info i);

@@ -11,7 +11,6 @@
 #include <string.h>
 
 void comandosGeo(SmuTreap t, char* fn){
-     printf("arquivo geo: %s\n", fn);
      FILE* f=fopen(fn, "r");
      if(f==NULL){
           printf("não foi possível acessar arquivo geo\n");
@@ -19,7 +18,6 @@ void comandosGeo(SmuTreap t, char* fn){
      }
      char comando[5];
      while(fscanf(f, "%s", comando)!=EOF){
-          //printf("comando: %s\n", comando);
           if(strcmp(comando, "cq")==0){
                char strW[30];
                char cfill[30];
